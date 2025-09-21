@@ -101,6 +101,12 @@ chain<T>::~chain() {
 }
 
 template<class T>
+void chain<T>::checkIndex(int theIndex) const {
+    if (theIndex < 0 || theIndex > listSize - 1) {
+        cerr << "The index is illegal.";
+    }
+}
+template<class T>
 T& chain<T>::get(int theIndex) const {
     checkIndex(theIndex);       //先确认链表中存在该节点
 
@@ -259,4 +265,162 @@ void chain<T>::push_back(const T &theElement) {
         currentNode->next = newNode;
     }
     listSize++;
+}
+
+//循环链表
+template<class T>
+class circularListWithHeader : public linearList<T>{
+public:
+    circularListWithHeader();
+    int indexOf(const T& theElement) const;
+    chainNode<T>* headerNode;
+    int listSize;
+};
+
+//创建一个只含有头节点的自环
+template<class T>
+circularListWithHeader<T>::circularListWithHeader() {
+    headerNode = new chainNode<T>();
+    headerNode->next = headerNode;
+    listSize = 0;
+}
+
+//将头节点设置为要查找的元素，无论怎样，循环都会结束，只是当在头节点停止时说明链表中不含该元素。
+template<class T>
+int circularListWithHeader<T>::indexOf(const T& theElement) const {
+    headerNode->element = theElement;
+
+    chainNode<T>* currentNode = headerNode->next;
+    int index = 0;
+    while (currentNode->next != theElement) {
+        currentNode = currentNode->next;
+        index++;
+    }
+
+    if (currentNode == headerNode) {
+        return -1;
+    }else {
+        return index;
+    }
+}
+
+template<class T>
+class doublyLinkedList : linearList<T> {
+    doublyLinkedList(int initialCapacity);
+    doublyLinkedList(const chain<T> &);
+    ~doublyLinkedList();
+
+    bool empty() const {return listSize == 0;}  //判断链表是否为空
+    int size() const {return listSize;}
+    T& get(int theIndex) const;     //返回指定下标值的元素
+    int indexOf(const T& theElement) const; //返回指定元素的下标
+    void erase(int theIndex);
+    void insert(int theIndex, const T& theElement);
+    void output(ostream& out) const;
+
+    void checkIndex(int theIndex) const;
+    chainNode<T>* firstNode;
+    chainNode<T>* lastNode;
+    int listSize;
+};
+
+template<class T>
+doublyLinkedList<T>::doublyLinkedList(int initialCapacity) {
+    if (initialCapacity < 1) {
+        cout << "Initial capacity = " << initialCapacity << " Must be > 0";
+    }
+    firstNode = lastNode = NULL;
+    listSize = 0;
+}
+
+template<class T>
+doublyLinkedList<T>::doublyLinkedList(const chain<T> &theList) {
+    listSize = theList.listSize;
+
+    if (listSize == 0) {
+        firstNode = lastNode = NULL;
+    }
+
+    chainNode<T>* sourceNode = theList.firstNode;
+    firstNode = new chainNode<T>(sourceNode->element);
+    sourceNode = sourceNode->next;      //让sourceNode多走一个，sourceNode负责在老链表取值，targetNode负责从新链表上一个节点链接
+    chainNode<T>* targetNode = firstNode;
+    while (sourceNode != NULL) {
+        targetNode->next = sourceNode;
+        sourceNode = sourceNode->next;
+        targetNode = targetNode->next;
+    }
+    lastNode = targetNode->next;
+}
+
+template<class T>
+void doublyLinkedList<T>::checkIndex(int theIndex) const {
+    if (theIndex < 0 || theIndex > listSize - 1) {
+        cerr << "The index is illegal.";
+    }
+}
+
+template<class T>
+T& doublyLinkedList<T>::get(int theIndex) const {
+    checkIndex(theIndex);
+
+    chainNode<T> currentNode = new chainNode<T>;
+    for (int i = 0; i < theIndex; i++) {
+        currentNode = currentNode->next;
+    }
+    return currentNode->element;
+}
+
+template<class T>
+int doublyLinkedList<T>::indexOf(const T& theElement)const {
+    chainNode<T> currentNode = firstNode;
+    int index = 0;
+    while (currentNode != NULL || currentNode->element != theElement) {
+        currentNode = currentNode->next;
+        index++;
+    }
+    if (currentNode == NULL) {
+        return -1;
+    }else {
+        return index;
+    }
+}
+
+template<class T>
+void doublyLinkedList<T>::erase(int theIndex){
+    checkIndex(theIndex);
+    chainNode<T>* deleteNode;
+    if (theIndex == 0) {
+        deleteNode = firstNode;
+        firstNode = firstNode->next;
+    }else {
+        chainNode<T> currentNode = firstNode;
+        for (int i = 0; i < theIndex - 1; i++) {
+            currentNode = currentNode->next;
+        }
+        deleteNode = currentNode->next;
+        currentNode->next = currentNode->next->next;
+    }
+    delete deleteNode;
+}
+
+template<class T>
+void doublyLinkedList<T>::insert(int theIndex, const T& theElement) {
+    if (theIndex < 0 || theIndex > listSize) {
+        cerr << "Illegal Index!!!";
+    }else if (theIndex == 0) {
+        firstNode = new chainNode<T>(theElement, firstNode);
+    }else {
+        chainNode<T> currentNode;
+        for (int i = 0; i < theIndex - 1; i++) {
+            currentNode->next = new chainNode<T>(theElement, currentNode->next);
+        }
+    }
+}
+
+template<class T>
+void doublyLinkedList<T>::output(ostream &out) const {
+    for (chainNode<T>* currentNode = firstNode; currentNode != NULL; currentNode = currentNode->next) {
+        out << currentNode->element << "  ";
+    }
 }
