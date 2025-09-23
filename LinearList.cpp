@@ -2,6 +2,7 @@
 // Created by 霍华德 on 2025/9/19.
 //
 #include <iostream>
+#include <list>
 using namespace std;
 
 template<class T>
@@ -21,6 +22,7 @@ template <class T>
 struct chainNode {
     T element;
     chainNode<T> *next;
+
     chainNode() {}      //默认构造函数
     //构造函数
     chainNode(const T& element) {
@@ -30,6 +32,25 @@ struct chainNode {
     chainNode(const T& element, chainNode<T>* next) {
         this->element = element;
         this->next = next;
+    }
+};
+
+template <class T>
+struct chainNode2 {
+    T element;
+    chainNode<T> *next;
+    chainNode<T> *prev;
+
+    chainNode2() {}      //默认构造函数
+    //构造函数
+    chainNode2(const T& element) {
+        this->element = element;
+    }
+    //拷贝构造函数
+    chainNode2(const T& element, chainNode<T>* next, chainNode<T>* prev) {
+        this->element = element;
+        this->next = next;
+        this->prev = prev;
     }
 };
 
@@ -267,6 +288,7 @@ void chain<T>::push_back(const T &theElement) {
     listSize++;
 }
 
+
 //循环链表
 template<class T>
 class circularListWithHeader : public linearList<T>{
@@ -304,10 +326,11 @@ int circularListWithHeader<T>::indexOf(const T& theElement) const {
     }
 }
 
+//双向链表
 template<class T>
 class doublyLinkedList : linearList<T> {
     doublyLinkedList(int initialCapacity);
-    doublyLinkedList(const chain<T> &);
+    explicit doublyLinkedList(const doublyLinkedList<T> &);
     ~doublyLinkedList();
 
     bool empty() const {return listSize == 0;}  //判断链表是否为空
@@ -319,8 +342,8 @@ class doublyLinkedList : linearList<T> {
     void output(ostream& out) const;
 
     void checkIndex(int theIndex) const;
-    chainNode<T>* firstNode;
-    chainNode<T>* lastNode;
+    chainNode2<T>* firstNode;
+    chainNode2<T>* lastNode;
     int listSize;
 };
 
@@ -333,24 +356,30 @@ doublyLinkedList<T>::doublyLinkedList(int initialCapacity) {
     listSize = 0;
 }
 
+/*拷贝构造函数
+ *在传参时一定要传要复制的链表的引用，相当于别名，如果传值的话，编译器会调用doublyLinkedList的复制构造函数从而发生无限递归调用
+ */
 template<class T>
-doublyLinkedList<T>::doublyLinkedList(const chain<T> &theList) {
+doublyLinkedList<T>::doublyLinkedList(const doublyLinkedList<T> &theList) {
     listSize = theList.listSize;
 
     if (listSize == 0) {
         firstNode = lastNode = NULL;
     }
 
-    chainNode<T>* sourceNode = theList.firstNode;
-    firstNode = new chainNode<T>(sourceNode->element);
+    chainNode2<T>* sourceNode = theList.firstNode;
+    firstNode = new chainNode2<T>(sourceNode->element);
+    firstNode->prev = NULL;
     sourceNode = sourceNode->next;      //让sourceNode多走一个，sourceNode负责在老链表取值，targetNode负责从新链表上一个节点链接
-    chainNode<T>* targetNode = firstNode;
+    chainNode2<T>* targetNode = firstNode;
     while (sourceNode != NULL) {
-        targetNode->next = sourceNode;
+        targetNode->next = new chainNode2<T>(sourceNode->element);  //一定要重新创建节点并为他们把element拷贝过来
+        targetNode->next->prev = targetNode;        //一定别忘了操作prev指针让其回指上一个节点
         sourceNode = sourceNode->next;
         targetNode = targetNode->next;
     }
-    lastNode = targetNode->next;
+    targetNode->next = NULL;
+    lastNode = targetNode;
 }
 
 template<class T>
@@ -363,17 +392,22 @@ void doublyLinkedList<T>::checkIndex(int theIndex) const {
 template<class T>
 T& doublyLinkedList<T>::get(int theIndex) const {
     checkIndex(theIndex);
-
-    chainNode<T> currentNode = new chainNode<T>;
-    for (int i = 0; i < theIndex; i++) {
-        currentNode = currentNode->next;
+    chainNode2<T> currentNode = new chainNode2<T>;
+    if (theIndex < listSize/2) {
+        for (int i = 0; i < theIndex; i++) {
+            currentNode = currentNode->next;
+        }
+    }else {
+        for (int i = listSize - 1; i > theIndex; i--) {
+            currentNode = currentNode->prev;
+        }
     }
     return currentNode->element;
 }
 
 template<class T>
 int doublyLinkedList<T>::indexOf(const T& theElement)const {
-    chainNode<T> currentNode = firstNode;
+    chainNode2<T> currentNode = firstNode;
     int index = 0;
     while (currentNode != NULL || currentNode->element != theElement) {
         currentNode = currentNode->next;
@@ -389,38 +423,92 @@ int doublyLinkedList<T>::indexOf(const T& theElement)const {
 template<class T>
 void doublyLinkedList<T>::erase(int theIndex){
     checkIndex(theIndex);
-    chainNode<T>* deleteNode;
+    chainNode2<T>* deleteNode;
+    /*分支1：删头操作，需要讨论链表是否只有一个节点
+     *分支2：删尾操作，但是需要排除掉链表只有一个节点即既是头又是尾的情况
+     *分支3：删除中间节点操作，根据中间节点位置确定是从头开始遍历还是从尾开始遍历
+     */
     if (theIndex == 0) {
         deleteNode = firstNode;
         firstNode = firstNode->next;
-    }else {
-        chainNode<T> currentNode = firstNode;
-        for (int i = 0; i < theIndex - 1; i++) {
-            currentNode = currentNode->next;
+        if (listSize == 1) {
+            lastNode = NULL;
+        }else {
+            firstNode->prev = NULL;
         }
-        deleteNode = currentNode->next;
-        currentNode->next = currentNode->next->next;
+    }else if (theIndex == listSize - 1 && theIndex != 0) {
+        deleteNode = lastNode;
+        lastNode = lastNode->prev;
+        lastNode->next = NULL;
+    }else {
+        chainNode2<T>* currentNode;
+        if (theIndex < listSize/2) {
+            currentNode = firstNode;
+            //为了能够处理前序节点指针prev的连接，我们这次让currentNode移动到要删除的节点的位置
+            for (int i = 0; i < theIndex; i++) {
+                currentNode = currentNode->next;
+            }
+        }else {
+            currentNode = lastNode;
+            for (int i = listSize - 1; i > theIndex; i--) {
+                currentNode = currentNode->prev;
+            }
+        }
+        deleteNode = currentNode;
+        currentNode->prev->next = currentNode->next;
+        currentNode->next->prev = currentNode->prev;
     }
     delete deleteNode;
+    listSize--;
 }
 
 template<class T>
 void doublyLinkedList<T>::insert(int theIndex, const T& theElement) {
+    /*分支1：处理异常下标值
+     *分支2：处理插头情况，但需要特别处理listSize=0条件下lastNode的设置问题
+     *分支3：处理插尾情况，但需要排除listSize=0的情况，因为这相当于插头操作，已经考虑到了
+     *分支4：处理插入中间节点情况，根据中间节点的位置判断从链表的哪一头开始遍历
+     */
     if (theIndex < 0 || theIndex > listSize) {
         cerr << "Illegal Index!!!";
+        return;
     }else if (theIndex == 0) {
-        firstNode = new chainNode<T>(theElement, firstNode);
-    }else {
-        chainNode<T> currentNode;
-        for (int i = 0; i < theIndex - 1; i++) {
-            currentNode->next = new chainNode<T>(theElement, currentNode->next);
+        chainNode2<T>* newNode = new chainNode2<T>(theElement, firstNode, NULL);
+        if (listSize != 0) {
+            firstNode->prev = newNode;
+            firstNode = newNode;
+        }else {
+            firstNode = newNode;
+            lastNode = newNode;
         }
+    }else if (theIndex == listSize && listSize != 0) {
+        chainNode2<T>* newNode = new chainNode2<T>(theElement, NULL, lastNode);
+        lastNode->next = newNode;
+        lastNode = newNode;
     }
+    else {
+        chainNode2<T>* currentNode;
+        if (theIndex < listSize/2) {
+            currentNode = firstNode;
+            for (int i = 0; i < theIndex; i++) {
+                currentNode = currentNode->next;
+            }
+        }else {
+            currentNode = lastNode;
+            for (int i = listSize - 1; i > theIndex; i--) {
+                currentNode = currentNode->prev;
+            }
+        }
+        chainNode2<T>* newNode = new chainNode2<T>(theElement, currentNode, currentNode->prev);
+        currentNode->prev = newNode;
+        newNode->prev->next = newNode;
+    }
+    listSize++;
 }
 
 template<class T>
 void doublyLinkedList<T>::output(ostream &out) const {
-    for (chainNode<T>* currentNode = firstNode; currentNode != NULL; currentNode = currentNode->next) {
+    for (chainNode2<T>* currentNode = firstNode; currentNode != NULL; currentNode = currentNode->next) {
         out << currentNode->element << "  ";
     }
 }
