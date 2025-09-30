@@ -1,14 +1,25 @@
 //
 // Created by 霍华德 on 2025/9/19.
 //
-#include <iostream>
-#include <list>
+#pragma once
+#ifndef LINEARLIST_H
+#define LINEARLIST_H
+#include<iostream>
 using namespace std;
+
+//定义异常
+class illegalIndex : public std::exception {
+    const char* what() const noexcept override { return "The index of the Node is illegal!"; }
+};
+
+class illegalInsertIndex : public std::exception {
+    const char* what() const noexcept override { return "The index of the node to insert is illegal!"; }
+};
 
 template<class T>
 class linearList {
 public:
-    virtual ~linearList();
+    virtual ~linearList() {};
     virtual bool empty() const = 0;
     virtual int size() const = 0;
     virtual T& get(int theIndex) const = 0;
@@ -68,6 +79,12 @@ public:
     void erase(int theIndex);
     void insert(int theIndex, const T& theElement);
     void output(ostream& out) const;
+    friend istream& operator>>(istream& in, chain& x) {
+        int ele;
+        in >> ele;
+        x.insert(x.size(), ele);
+        return in;
+    }
 
     void clear();
     void push_back(const T& theElement);
@@ -124,7 +141,7 @@ chain<T>::~chain() {
 template<class T>
 void chain<T>::checkIndex(int theIndex) const {
     if (theIndex < 0 || theIndex > listSize - 1) {
-        cerr << "The index is illegal.";
+        throw illegalIndex();
     }
 }
 template<class T>
@@ -179,8 +196,7 @@ void chain<T>::erase(int theIndex) {
 template<class T>
 void chain<T>::insert(int theIndex, const T& theElement) {
     if (theIndex < 0 || theIndex > listSize) {
-        cout << "index = " << theIndex << " size = " << listSize;
-        // throw illegalIndex();
+        throw illegalInsertIndex();
     }
     if (theIndex == 0) {
         //先执行右侧创建新节点操作，让头结点指向该节点
@@ -512,3 +528,5 @@ void doublyLinkedList<T>::output(ostream &out) const {
         out << currentNode->element << "  ";
     }
 }
+
+#endif

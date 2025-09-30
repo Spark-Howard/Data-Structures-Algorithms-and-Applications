@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(HelloWorld HelloWorld.cpp)
 add_executable(Sorting Sorting.cpp)
-add_executable(LinearList LinearList.cpp)
+add_executable(LinearList LinearList.h test_of_chain.cpp )
 add_executable(Matrix Matrix.cpp)
