@@ -2,6 +2,7 @@
 // Created by 霍华德 on 2025/9/26.
 //
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 //先定义常见异常类型
@@ -24,11 +25,21 @@ class matrixSizeMismatch: public std::exception {
     const char* what() const noexcept override { return "Matrix's size is not match."; }
 };
 
+template <class T>
+class matrix;
+
+template <class T>
+ostream& operator <<(ostream&, const matrix<T>&);
+
+template <class T>
+istream& operator >>(istream&, matrix<T>&);
+
 template<class T>
 class matrix {
-    friend ostream& operator << (ostream&, const matrix<T>&);
-    friend istream& operator >> (istream&, const matrix<T>&);
 public:
+    friend ostream& operator << <T>(ostream&, const matrix<T>&);
+    friend istream& operator >> <T>(istream&, matrix<T>&);
+
     matrix(int theRows = 0, int theColumns = 0);
     matrix(const matrix<T>&);
     ~matrix() {delete [] element;}
@@ -42,6 +53,10 @@ public:
     matrix<T> operator-(const matrix<T>&) const;
     matrix<T> operator*(const matrix<T>&) const;
     matrix<T>& operator+=(const T&);
+    matrix<T>& operator-=(const T&);
+    matrix<T>& operator*=(const T&);
+
+    matrix<T> transpose() const;
 
 private:
     int theRows, theColumns;
@@ -85,7 +100,7 @@ T& matrix<T>::operator()(int i, int j) const {
     if (i < 1 || i > theRows || j < 1 || j > theColumns) {
         throw matrixIndexOutOfBounds();
     }
-    return element[(i - 1) * theColumns + j -1];
+    return element[(i - 1) * theColumns + j - 1];
 }
 
 template<class T>
@@ -158,18 +173,33 @@ matrix<T>& matrix<T>::operator+=(const T& t) {
     for (int i = 0; i < theRows * theColumns; i++) {
         element[i] += t;
     }
-
     return *this;
 }
 
 template<class T>
-ostream& operator<<(ostream &out, matrix<T>& m) {
+matrix<T> &matrix<T>::operator-=(const T &t) {
+    for (int i = 0; i < theRows * theColumns; i++) {
+        element[i] -= t;
+    }
+    return *this;
+}
+
+template<class T>
+matrix<T> &matrix<T>::operator*=(const T &t) {
+    for (int i = 0; i < theRows * theColumns; i++) {
+        element[i] *= t;
+    }
+    return *this;
+}
+
+template <class T>
+ostream& operator <<(ostream& out, const matrix<T>& m) {
     for (int i = 1; i <= m.rows(); i++) {
         for (int j = 1; j <= m.columns(); j++) {
             if (j == m.columns()) {
-                out << m(i, j);
+                out << setw(6) << m(i, j);
             }else {
-                out << m(i, j) << "\t";
+                out << setw(6) << m(i, j);
             }
         }
         out << "\n";
@@ -177,24 +207,31 @@ ostream& operator<<(ostream &out, matrix<T>& m) {
     return out;
 }
 
-template<class T>
-istream& operator>>(istream& in, matrix<T>& m) {
-    // char space0 [] = "";
-    // char space1 [] = " ";
-    // char space2 [] = "  ";
-    // char space3 [] = "   ";
-    // char space4 [] = "    ";
-    // char space5 [] = "     ";
+template <class T>
+istream& operator >>(istream& in, matrix<T>& m) {
     for (int i = 1; i <= m.rows(); ++i)
         for (int j = 1; j <= m.columns(); ++j)
             in >> m(i, j);          // 用你已经写好的 operator()
     return in;
 }
 
+template<class T>
+matrix<T> matrix<T>::transpose() const{
+    matrix<T> w(theColumns, theRows);
+    for (int i = 1; i <= theColumns; i++) {
+        for (int j = 1; j <= theRows; j++) {
+            w(i, j) = (*this)(j,i);
+        }
+    }
+    return w;
+}
+
+
 int main() {
     matrix<int> m1(4, 3);
     cin >> m1;
     cout << m1;
 
+    cout << m1.transpose();
     return 0;
 }

@@ -3,7 +3,6 @@
 //
 #pragma once
 #ifndef LINEARLIST_H
-#define LINEARLIST_H
 #include<iostream>
 using namespace std;
 
