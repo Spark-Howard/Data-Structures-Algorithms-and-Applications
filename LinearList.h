@@ -4,6 +4,8 @@
 #pragma once
 #ifndef LINEARLIST_H
 #include<iostream>
+#include<sstream>
+#include<vector>
 using namespace std;
 
 //定义异常
@@ -526,6 +528,132 @@ void doublyLinkedList<T>::output(ostream &out) const {
     for (chainNode2<T>* currentNode = firstNode; currentNode != NULL; currentNode = currentNode->next) {
         out << currentNode->element << "  ";
     }
+}
+
+// arrayList类
+template <class T>
+class arrayList : public linearList<T> {
+public:
+    arrayList(int initialCapacity = 10);
+    arrayList(const arrayList<T>&);
+    ~arrayList() { delete [] element; }
+    bool empty() const { return listSize == 0; }
+    int size() const {return listSize; }
+    T& get(int theIndex) const;
+    int indexOf (const T& theElement) const;
+    void erase(int theIndex);
+    void insert(int theIndex, const T& theElement);
+    void output(ostream& out) const;
+
+    int capacity() const { return arrayLength; }
+
+protected:
+    void checkIndex(int theIndex) const;
+    T* element;
+    int arrayLength;
+    int listSize;
+};
+
+template<class T>
+arrayList<T>::arrayList(int initialCapacity) {
+    if (initialCapacity < 1) {
+        ostringstream s;
+        s << "Initial capacity = " << initialCapacity << " Must be > 0";
+        throw illegalIndex();
+    }
+    arrayLength = initialCapacity;
+    element = new T[arrayLength];
+    listSize = 0;
+}
+
+//拷贝构造函数
+template<class T>
+arrayList<T>::arrayList(const arrayList<T>& theList) {
+    arrayLength = theList.arrayLength;
+    listSize = theList.listSize;
+    element = new T[arrayLength];
+    copy(theList.element, theList.element + listSize, element);
+}
+
+template<class T>
+void arrayList<T>::checkIndex(int theIndex) const {
+    if (theIndex < 0 || theIndex >= listSize) {
+        ostringstream s;
+        s << "index = " << theIndex << " size = " << listSize;
+        throw illegalIndex();
+    }
+}
+
+template<class T>
+T& arrayList<T>::get(int theIndex) const {
+    checkIndex(theIndex);
+    return element[theIndex];
+}
+
+template<class T>
+int arrayList<T>::indexOf(const T& theElement) const {
+    int theIndex = (int) (find(element, element + listSize, theElement) - element);     //find函数传入什么类型的迭代器就会返回什么类型的迭代器，如果find函数没有找到对应元素，迭代器会停留在对应尾结点
+    if (theIndex == listSize) {
+        return -1;
+    }else {
+        return theIndex;
+    }
+}
+
+template<class T>
+void arrayList<T>::erase(int theIndex) {
+    checkIndex(theIndex);
+    //从element + index位置开始逐个把element + index后的元素复制过来
+    copy(element + theIndex + 1, element + listSize, element + theIndex);
+    //将数组最后的空位置回收
+    element[--listSize].~T();
+}
+
+template<class T>
+void arrayList<T>::insert(int theIndex, const T& theElement) {
+    if (theIndex < 0 || theIndex > listSize) {
+        ostringstream s;
+        s << "index = " << theIndex << " size = " << listSize;
+        throw illegalInsertIndex();
+    }
+
+    if (listSize == arrayLength) {
+        changeLength(element, arrayLength, 2 * arrayLength);
+        arrayLength *= 2;
+    }
+    //把元素按原序复制到目标区间的尾部，第三个参数为尾后迭代器，这一步相当于将插入位置后所有元素向后移动一个位置
+    copy_backward(element + theIndex, element + listSize, element + listSize + 1);
+
+    element[theIndex] = theElement;
+    listSize++;
+}
+
+template<class T>
+void arrayList<T>::output(ostream &out) const {
+    copy(element, element + listSize, ostream_iterator<T>(cout, " "));
+}
+template<class T>
+ostream& operator<<(ostream& out, const arrayList<T>& x) {
+    x.output(out);
+    return out;
+}
+
+/*
+作用：将数组的长度加倍
+输入：指针a指向需要改变长度的数组，oldLength表示数组原来的长度，newLength表示需要改变的新长度
+结果：将数组扩容/缩容 为newLength
+*/
+template<class T>
+void changeLength(T*& a, int oldLength, int newLength)
+{
+    if (newLength < 0) {
+        throw illegalIndex();
+    }
+    T* temp = new T[newLength];
+    int number = min(oldLength, newLength);
+    copy(a, a + number, temp);
+    delete[] a;
+    a = temp;
 }
 
 #endif
