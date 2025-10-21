@@ -530,6 +530,12 @@ void doublyLinkedList<T>::output(ostream &out) const {
     }
 }
 
+template<class T>
+class arrayList;
+
+template <class T>
+istream& operator >>(istream&, arrayList<T>&);
+
 // arrayList类
 template <class T>
 class arrayList : public linearList<T> {
@@ -543,7 +549,9 @@ public:
     int indexOf (const T& theElement) const;
     void erase(int theIndex);
     void insert(int theIndex, const T& theElement);
+    void changeLength(T*&, int, int);
     void output(ostream& out) const;
+    friend istream& operator>> <T>(istream&, arrayList&);
 
     int capacity() const { return arrayLength; }
 
@@ -644,7 +652,7 @@ ostream& operator<<(ostream& out, const arrayList<T>& x) {
 结果：将数组扩容/缩容 为newLength
 */
 template<class T>
-void changeLength(T*& a, int oldLength, int newLength)
+void arrayList<T>::changeLength(T*& a, int oldLength, int newLength)
 {
     if (newLength < 0) {
         throw illegalIndex();
@@ -654,6 +662,24 @@ void changeLength(T*& a, int oldLength, int newLength)
     copy(a, a + number, temp);
     delete[] a;
     a = temp;
+}
+
+template<class T>
+istream& operator >>(istream& in, arrayList<T>& x) {
+    T val;
+    while (in >> val) {
+        x.insert(x.listSize, val);
+    }
+    return in;
+}
+
+template<class iterator>
+void copy(iterator start, iterator end, iterator to) {
+    while (start != end) {
+        *to = *start;
+        start++;
+        to++;
+    }
 }
 
 #endif
