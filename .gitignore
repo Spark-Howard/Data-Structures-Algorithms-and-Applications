@@ -17,6 +17,7 @@ out/
 *.user
 *.suo
 *.swp
+*.dSYM
 *~
 .DS_Store
 Thumbs.db
