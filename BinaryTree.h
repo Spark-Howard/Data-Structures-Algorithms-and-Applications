@@ -1,0 +1,217 @@
+//
+// Created by 霍华德 on 2025/10/26.
+//
+#pragma once
+#ifndef BINARYTREE_H
+#include<iostream>
+#include<queue>
+using namespace std;
+
+template <class T>
+struct binaryTreeNode {
+    T element;
+    binaryTreeNode<T> *leftChild;
+    binaryTreeNode<T> *rightChild;
+
+    binaryTreeNode() {
+        leftChild = rightChild = NULL;
+    }
+    binaryTreeNode(const T& theElement) {
+        element = theElement;
+        leftChild = rightChild = NULL;
+    }
+    binaryTreeNode(const T& theElement, binaryTreeNode<T> *l, binaryTreeNode<T> *r) {
+        element = theElement;
+        leftChild = l;
+        rightChild = r;
+    }
+};
+
+template <class T>
+void visit(binaryTreeNode<T>* current, bool& isFirst) {
+    if (isFirst) {
+        cout << current->element;
+    }else {
+        cout << "," << current->element;
+    }
+}
+
+template <class T>
+class binaryTree {
+public:
+    binaryTree() {
+        origin = NULL;
+        nodeNumber = 0;
+    }
+    binaryTreeNode<T>* root();
+    void setRoot(binaryTreeNode<T>*);
+    void preOrder(binaryTreeNode<T>*);
+    void inOrder(binaryTreeNode<T>*);
+    void postOrder(binaryTreeNode<T>*);
+    void levelOrder(binaryTreeNode<T>*);
+    void createTree(const char*, int);
+    int numberOfNodes(binaryTreeNode<T>*);
+    int height(binaryTreeNode<T>*);
+    binaryTreeNode<T>* createTreeByPreAndIn(vector<T>*, vector<T>*, unordered_map<T, int>*, int, int, int, int);
+    binaryTreeNode<T>* createTreeByPostAndIn(vector<T>*, vector<T>*, unordered_map<T, int>*, int, int, int, int);
+private:
+    void preOrderHelper(binaryTreeNode<T>*, bool&);
+    void inOrderHelper(binaryTreeNode<T>*, bool&);
+    void postOrderHelper(binaryTreeNode<T>*, bool&);
+    int nodeNumber;
+    binaryTreeNode<T> *origin;
+};
+
+template<class T>
+binaryTreeNode<T> *binaryTree<T>::root() {
+    return origin;
+}
+
+template<class T>
+void binaryTree<T>::setRoot(binaryTreeNode<T> *newRoot) {
+    origin = newRoot;
+}
+
+template<class T>
+void binaryTree<T>::preOrder(binaryTreeNode<T>* current) {
+    bool first = true;
+    preOrderHelper(current, first);
+}
+template<class T>
+void binaryTree<T>::preOrderHelper(binaryTreeNode<T> *current, bool& first) {
+    if (!current) {
+        return;
+    }
+    visit(current, first);
+    first = false;
+    preOrderHelper(current->leftChild, first);
+    preOrderHelper(current->rightChild, first);
+}
+
+template<class T>
+void binaryTree<T>::inOrder(binaryTreeNode<T>* current) {
+    bool first = true;
+    inOrderHelper(current, first);
+}
+template<class T>
+void binaryTree<T>::inOrderHelper(binaryTreeNode<T> *current, bool& first) {
+    if (!current) {
+        return;
+    }
+    inOrderHelper(current->leftChild, first);
+    visit(current, first);
+    first = false;
+    inOrderHelper(current->rightChild, first);
+}
+template<class T>
+void binaryTree<T>::postOrder(binaryTreeNode<T>* current) {
+    bool first = true;
+    postOrderHelper(current, first);
+}
+template<class T>
+void binaryTree<T>::postOrderHelper(binaryTreeNode<T> *current, bool& first) {
+    if (!current) {
+        return;
+    }
+    postOrderHelper(current->leftChild, first);
+    postOrderHelper(current->rightChild, first);
+    visit(current, first);
+    first = false;
+}
+template<class T>
+void binaryTree<T>::levelOrder(binaryTreeNode<T> *current) {
+    queue<binaryTreeNode<T>*> q;
+    q.push(current);
+    while (!q.empty()) {
+        binaryTreeNode<T>* node = q.front();
+        visit(node);
+        q.pop();
+        q.push(current->leftChild);
+        q.push(current->rightChild);
+    }
+}
+template<class T>
+void binaryTree<T>::createTree(const char* str, int size) {
+    if (size <= 0) {
+        origin = NULL;
+        return;
+    }
+    vector<binaryTreeNode<T>*> nodes(size);
+    for (int i = 0; i < size; i++) {
+        if (str[i] == '#') {
+            nodes[i] = NULL;
+        }else {
+            nodes[i] = new binaryTreeNode<T>(str[i]);
+        }
+    }
+
+    for (int i = 0; i < size; i++) {
+        int l = 2 * i + 1;
+        int r = 2 * i + 2;
+        if (l < size) {
+            nodes[i]->leftChild = nodes[l];
+        }
+        if (r < size) {
+            nodes[i]->rightChild = nodes[r];
+        }
+    }
+    origin = nodes[0];
+}
+
+template<class T>
+int binaryTree<T>::numberOfNodes(binaryTreeNode<T> *current) {
+    if (!current) {
+        return 0;
+    }
+    return 1 + numberOfNodes(current->leftChild) + numberOfNodes(current->rightChild);
+}
+
+template <class T>
+int binaryTree<T>::height(binaryTreeNode<T> *current) {
+    if (!current) {
+        return 0;
+    }
+    int leftHeight = height(current->leftChild);
+    int rightHeight = height(current->rightChild);
+    if (leftHeight > rightHeight) {
+        return ++leftHeight;
+    }else {
+        return ++rightHeight;
+    }
+}
+
+template<class T>
+void createMapOfInOrder(vector<T>* inOrder, unordered_map<T, int> &idx) {
+    for (int i = 0; i < inOrder->size(); i++) {
+        idx[(*inOrder)[i]] = i;
+    }
+}
+
+template<class T>
+binaryTreeNode<T> *binaryTree<T>::createTreeByPreAndIn(vector<T>* preOrder, vector<T>* inOrder, unordered_map<T, int>* key, int preL, int preR, int inL, int inR) {
+    if (preL > preR) {
+        return nullptr;
+    }
+    T rootVal = (*preOrder)[preL];
+    int rootIndex = (*key)[rootVal];
+    binaryTreeNode<T> *current = new binaryTreeNode<T>(rootVal);
+    current->leftChild = createTreeByPreAndIn(preOrder, inOrder, key, preL + 1, rootIndex + preL - inL, inL, rootIndex - 1);
+    current->rightChild = createTreeByPreAndIn(preOrder, inOrder, key, rootIndex + preL - inL + 1, preR, rootIndex + 1, inR);
+    return current;
+}
+template<class T>
+binaryTreeNode<T> *binaryTree<T>::createTreeByPostAndIn(vector<T> *postOrder, vector<T> *inOrder, unordered_map<T, int> *key, int postL, int postR, int inL, int inR) {
+    if (postL > postR) {
+        return nullptr;
+    }
+    T rootVal = (*postOrder)[postR];
+    int rootIndex = (*key)[rootVal];
+    binaryTreeNode<T> *current = new binaryTreeNode<T>(rootVal);
+    current->leftChild = createTreeByPostAndIn(postOrder, inOrder, key, postL, rootIndex + postL - inL - 1, inL, rootIndex - 1);
+    current->leftChild = createTreeByPostAndIn(postOrder, inOrder, key, rootIndex + postL - inL, rootIndex + 1, inR);
+    return current;
+}
+
+
+
+#endif

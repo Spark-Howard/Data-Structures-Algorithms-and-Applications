@@ -2,7 +2,7 @@
 // Created by 霍华德 on 2025/10/10.
 //
 #pragma once
-#ifndef STACK.H
+#ifndef STACK_H
 #include <iostream>
 #include <iomanip>
 #include "LinearList.h"
