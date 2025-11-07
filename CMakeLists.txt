@@ -12,3 +12,4 @@ add_executable(AlternativeMatrix AlternativeMatrix.h test_of_alternativeMatrix.c
 add_executable(Queue Queue.h test_of_queue.cpp)
 add_executable(Stack Stack.h application_of_stack.cpp)
 add_executable(BinaryTree BinaryTree.h test_of_binaryTree.cpp)
+add_executable(MaxHeap MaxHeap.cpp)
