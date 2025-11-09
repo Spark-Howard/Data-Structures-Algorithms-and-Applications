@@ -1,7 +1,10 @@
 //
 // Created by 霍华德 on 2025/11/7.
 //
+#pragma once
+#ifndef MAX_HEAP
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 class heapEmpty : public std::exception {
@@ -41,15 +44,30 @@ struct binaryTreeNode {
 template<class T>
 class maxHeap {
 public:
-    bool empty() { return heapSize == 0; }
+    maxHeap(int initialCapacity = 10);
+    bool empty() const { return heapSize == 0; }
+    void initialize(T *theHeap, int theSize);
     void push(const T&);
     void pop();
+    T& top();
 
 private:
     int heapSize;
     int arrayLength;
     T* heap;
 };
+
+template<class T>
+maxHeap<T>::maxHeap(int initialCapacity) {
+    if (initialCapacity < 1) {
+        ostringstream s;
+        s << "Initial capacity = " << initialCapacity << " Must be > 0";
+        throw illegalParameterValue(s.str());
+    }
+    arrayLength = initialCapacity + 1;
+    heap = new T[arrayLength];
+    heapSize = 0;
+}
 
 //相当于将新插入节点放置于最后一个节点处，然后从该节点处向上起泡
 template<class T>
@@ -97,6 +115,41 @@ void maxHeap<T>::pop() {
     heap[currentNode] = lastElement;
 }
 
+//时间复杂度小于O(nlogn)，实际复杂度为Θ(n)
+template<class T>
+void maxHeap<T>::initialize(T *theHeap, int theSize) {
+    delete [] heap;
+    heap = theHeap;
+    heapSize = theSize;
+
+    //大根堆的建立要从最后一个非叶子节点开始
+    for (int root = heapSize / 2; root >= 1; root--) {
+        T rootElement = heap[root];
+
+        int child = 2 * root;
+        //root在while循环中始终虚指当前位置，即交换操作只有父节点被子节点元素赋值，父节点元素(即当前rootElement)的位置待定，位置确定后在进行赋值
+        while (child <= heapSize) {
+            if (child < heapSize && heap[child] < heap[child + 1]) {
+                child++;
+            }
+            if (rootElement >= heap[child]) {
+                break;
+            }
+            heap[child / 2] = heap[child];
+            child *= 2;
+        }
+        heap[child / 2] = rootElement;
+    }
+}
+
+template<class T>
+T &maxHeap<T>::top() {
+    if (empty()) {
+        throw heapEmpty();
+    }
+    return heap[1];
+}
+
 template<class T>
 void changeLength(T*& a, int oldLength, int newLength)
 {
@@ -108,3 +161,5 @@ void changeLength(T*& a, int oldLength, int newLength)
     delete[] a;
     a = temp;
 }
+
+#endif

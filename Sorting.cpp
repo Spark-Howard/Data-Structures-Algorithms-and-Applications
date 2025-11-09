@@ -1,5 +1,6 @@
 #include<vector>
 #include<iostream>
+#include"MaxHeap.h"
 using namespace std;
 
 class Sorting {
@@ -93,6 +94,23 @@ public:
         return nums;
     }
 
+    //堆排序(不稳定)：
+    vector<int> HeapSort(vector<int> nums) {
+        int* sequence = new int[nums.size() + 1];
+        for (int i = 1; i <= nums.size(); i++) {
+            sequence[i] = nums[i - 1];
+        }
+        // vector<int> sequence(nums.size() + 1);
+        // copy(nums.begin(), nums.end(), sequence.data() + 1);
+        maxHeap<int> heap(nums.size());
+        heap.initialize(sequence, nums.size());
+        for (int i = nums.size() - 1; i >= 0; i--) {
+            nums[i] = heap.top();
+            heap.pop();
+        }
+        return nums;
+    }
+
     /*希尔排序(不稳定)：改进了插入排序，由于插入排序在数据量较小效率较高，
      *所以我们设置增量对数据进行分组进行插入排序,并不断减小增量，最终实现整个数组的排序
      */
@@ -155,7 +173,14 @@ int main() {
 
     vector<int> sorted6 = sort.ShellSort(a);
     for (int i = 0; i <= a.size() - 1; i++) {
-        cout << sorted5[i] << " ";
+        cout << sorted6[i] << " ";
+    }
+    cout << endl;
+
+    vector<int> b = {9,2,3,5,8,1,6,4,7};
+    vector<int> sorted7 = sort.HeapSort(b);
+    for (int i = 0; i <= b.size() - 1; i++) {
+        cout << sorted7[i] << " ";
     }
     cout << endl;
     return 0;
