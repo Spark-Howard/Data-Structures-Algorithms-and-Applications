@@ -5,6 +5,7 @@
 #include <sstream>
 #include <queue>
 #include <algorithm>
+#include <climits>
 using namespace std;
 
 class illegalParameterValue : public std::exception {
@@ -30,15 +31,14 @@ private:
 };
 
 template <class T>
-void make2dArray(T**& a, int n) {  // n 表示最大索引，数组大小为 (n+1)*(n+1)
-    int size = n + 1;             // 行/列数：n+1
+void make2dArray(T**& a, int rows, int cols) {  // n 表示最大索引，数组大小为 (n+1)*(n+1)
     // 1. 分配行指针数组（0~n 行）
-    a = new T*[size];
+    a = new T*[rows];
     // 2. 分配连续元素池：(n+1)*(n+1) 个元素
-    a[0] = new T[size * size];
+    a[0] = new T[rows * cols];
     // 3. 映射每行首地址（i从0到n）
-    for (int i = 0; i < size; i++) {
-        a[i] = a[0] + i * size;  // 第i行首地址 = 元素池起始 + i*(n+1)
+    for (int i = 0; i < rows; i++) {
+        a[i] = a[0] + i * cols;  // 第i行首地址 = 元素池起始 + i*(n+1)
     }
 }
 
@@ -117,6 +117,7 @@ public:
     virtual bool weighted() const = 0;
 
     virtual void bfs(int v, int reach[], int label);
+    virtual void dfs(int v, int reach[], int label);
     virtual vertexIterator<T>* iterator(int) = 0;
 };
 
@@ -135,9 +136,22 @@ void Graph<T>::bfs(int v, int reach[], int label) {
                 q.push(u);
                 reach[u] = label;
             }
-            delete iw;
+        }
+        delete iw;
+    }
+}
+
+template<class T>
+void Graph<T>::dfs(int v, int reach[], int label) {
+    reach[v] = label;
+    vertexIterator<T> *iv = iterator(v);
+    int u;
+    while ((u = iv->next()) != 0) {
+        if (reach[u] == 0) {
+            dfs(u, reach, label);
         }
     }
+    delete iv;
 }
 
 template<class T>
@@ -167,9 +181,12 @@ public:
     int inDegree(int theVertex) const;
 
     void bfs(int v, int reach[], int label);
+    void dfs(int v, int reach[], int label);
 
+    void dijkstra(int source, T* dist[], int* parent);
+    void printShortestPath(int source, int target, int* parent, T* dist);
     myIterator<T>* iterator(int theVertex) {
-        checkVertex();
+        checkVertex(theVertex);
         return new myIterator<T>(a[theVertex], noEdge, n);
     }
 };
@@ -270,4 +287,86 @@ void adjacencyWDigraph<T>::bfs(int v, int reach[], int label) {
             }
         }
     }
+}
+template<class T>
+void adjacencyWDigraph<T>::dfs(int v, int reach[], int label) {
+    reach[v] = label;
+    for (int u = 1; u <= n; u++) {
+        if (a[v][u] != noEdge && reach[u] == 0) {
+            dfs(u, reach, label);
+        }
+    }
+}
+
+//dist数组记录了到目前为止，起点到每个顶点的距离的最小值，这些值可能会进行更新
+template<class T>
+void adjacencyWDigraph<T>::dijkstra(int source, T *dist[], int* parent) {
+    checkVertex(source);
+    int n = numberOfVertices();
+    bool* visited = new bool[n + 1];
+    T INF = (T)INT_MAX;
+
+    //初始化距离和前驱
+    for (int i = 1; i <= n; i++) {
+        if (i == source) {
+            dist[i] = 0;
+        }else {
+            dist[i] = INF;
+        }
+        parent[i] = -1;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        //第 1 步：选择未访问且距离最小的顶点u
+        T minDist = INF;
+        int u = -1;
+        for (int j = 1; j <= n; j++) {
+            if (!visited[j] && dist[j] < minDist) {
+                minDist = dist[j];
+                u = j;
+            }
+        }
+        //剩余节点均已访问过
+        if (u == -1) {
+            break;
+        }
+        //将u加入已求得最短路径的顶点的集合
+        visited[u] = true;
+
+        //第 2 步：松弛u的所有邻接顶点
+        for (int v = 1; v <= n; v++) {
+            if (!visited[v] && existsEdge(u,v)) {
+                T newDist = dist[u] + a[u];
+                if (newDist < dist[v]) {
+                    dist[v] = newDist;
+                    parent[v] = u;
+                }
+            }
+        }
+    }
+    delete[] visited;
+}
+template<class T>
+void adjacencyWDigraph<T>::printShortestPath(int source, int target, int *parent, T *dist) {
+    if (dist[target] == (T)INT_MAX) {
+        cout << "起点" << source << "到顶点" << target << "无路径" << endl;
+        return;
+    }
+
+    int* path = new int[numberOfVertices() + 1];
+    int length = 0;
+    for (int v = target; v != -1; v = parent[v]) {
+        path[length++] = v;
+    }
+
+    cout << "起点" << source << "到顶点" << target << "的最短路径为：";
+    for (int i = length - 1; i >= 0; i--) {
+        cout << path[i];
+        if (i > 0) {
+            cout << "->";
+        }
+    }
+    cout << "总长度：" << dist[target] << endl;
+
+    delete[] path;
 }
