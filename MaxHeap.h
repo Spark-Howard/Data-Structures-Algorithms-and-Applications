@@ -3,7 +3,9 @@
 //
 #pragma once
 #ifndef MAX_HEAP
+#define MAX_HEAP
 #include <iostream>
+#include <algorithm>
 #include <sstream>
 using namespace std;
 

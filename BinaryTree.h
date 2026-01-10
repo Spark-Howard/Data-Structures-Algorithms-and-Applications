@@ -74,6 +74,7 @@ void binaryTree<T>::setRoot(binaryTreeNode<T> *newRoot) {
     origin = newRoot;
 }
 
+// 二叉树前序遍历
 template<class T>
 void binaryTree<T>::preOrder(binaryTreeNode<T>* current) {
     bool first = true;
@@ -91,6 +92,7 @@ void binaryTree<T>::preOrderHelper(binaryTreeNode<T> *current, bool& first) {
     preOrderHelper(current->rightChild, first);
 }
 
+// 二叉树中序遍历
 template<class T>
 void binaryTree<T>::inOrder(binaryTreeNode<T>* current) {
     bool first = true;
@@ -107,6 +109,8 @@ void binaryTree<T>::inOrderHelper(binaryTreeNode<T> *current, bool& first) {
     first = false;
     inOrderHelper(current->rightChild, first);
 }
+
+// 二叉树后序遍历
 template<class T>
 void binaryTree<T>::postOrder(binaryTreeNode<T>* current) {
     bool first = true;
@@ -123,18 +127,25 @@ void binaryTree<T>::postOrderHelper(binaryTreeNode<T> *current, bool& first) {
     visit(current, first);
     first = false;
 }
+
+// 二叉树层序遍历
 template<class T>
 void binaryTree<T>::levelOrder(binaryTreeNode<T> *current) {
     queue<binaryTreeNode<T>*> q;
     q.push(current);
     while (!q.empty()) {
         binaryTreeNode<T>* node = q.front();
-        visit(node);
         q.pop();
-        q.push(current->leftChild);
-        q.push(current->rightChild);
+        visit(node);
+        if (node->leftChild) {
+            q.push(node->leftChild);
+        }
+        if (node->rightChild) {
+            q.push(node->rightChild);
+        }
     }
 }
+
 template<class T>
 void binaryTree<T>::createTree(const char* str, int size) {
     if (size <= 0) {
