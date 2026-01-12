@@ -3,6 +3,7 @@
 //
 #pragma once
 #ifndef LINEARLIST_H
+#define LINEARLIST_H
 #include<iostream>
 #include<sstream>
 #include<vector>
@@ -30,6 +31,7 @@ public:
     virtual void output(ostream& out) const = 0;
 };
 
+// 单向链表节点
 template <class T>
 struct chainNode {
     T element;
@@ -47,6 +49,7 @@ struct chainNode {
     }
 };
 
+// 双向链表节点
 template <class T>
 struct chainNode2 {
     T element;
@@ -59,7 +62,7 @@ struct chainNode2 {
         this->element = element;
     }
     //拷贝构造函数
-    chainNode2(const T& element, chainNode<T>* next, chainNode<T>* prev) {
+    chainNode2(const T& element, chainNode2<T>* next, chainNode2<T>* prev) {
         this->element = element;
         this->next = next;
         this->prev = prev;
@@ -73,8 +76,8 @@ public:
     chain(const chain<T>&);
     ~chain();
 
-    bool empty() const {return listSize == 0;}  //判断链表是否为空
-    int size() const {return listSize;}
+    bool empty() const { return listSize == 0; }  //判断链表是否为空
+    int size() const { return listSize; }
     T& get(int theIndex) const;     //返回指定下标值的元素
     int indexOf(const T& theElement) const; //返回指定元素的下标
     void erase(int theIndex);
@@ -120,7 +123,7 @@ chain<T>::chain(const chain<T>& theList) {
     //定义了一个指向chainNode<T>结构体的指针变量sourceNode，并用theList.firstNode里的地址给它初始化。
     chainNode<T>* sourceNode = theList.firstNode;
     firstNode = new chainNode<T>(sourceNode->element);
-    sourceNode = sourceNode->next;      //让sourceNode多走一个，sourceNode负责在老链表取值，targetNode负责从新链表上一个节点链接
+    sourceNode = sourceNode->next;      //让sourceNode多走一个节点，sourceNode负责在老链表取值，targetNode负责从新链表上一个节点链接
     chainNode<T>* targetNode = firstNode;
     while (sourceNode != NULL) {
         targetNode->next = new chainNode<T>(sourceNode->element);

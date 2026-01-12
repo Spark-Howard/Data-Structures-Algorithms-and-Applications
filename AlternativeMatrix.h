@@ -3,6 +3,7 @@
 //
 #pragma once
 #ifndef ALTERNATIVEMATRIX_H
+#define ALTERNATIVEMATRIX_H
 #include <exception>
 #include <iostream>
 #include <iomanip>

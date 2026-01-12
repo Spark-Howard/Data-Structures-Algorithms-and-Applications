@@ -264,8 +264,8 @@ template<class T>
 int adjacencyWDigraph<T>::inDegree(int theVertex) const {
     checkVertex(theVertex);
     int sum = 0;
-    for (int j = 1; j <= n; j++) {
-        if (a[j][theVertex] != noEdge) {
+    for (int i = 1; i <= n; i++) {
+        if (a[i][theVertex] != noEdge) {
             sum++;
         }
     }

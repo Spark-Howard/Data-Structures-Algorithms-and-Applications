@@ -3,6 +3,7 @@
 //
 #pragma once
 #ifndef STACK_H
+#define STACK_H
 #include <iostream>
 #include <iomanip>
 #include "LinearList.h"

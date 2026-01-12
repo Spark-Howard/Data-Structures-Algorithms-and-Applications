@@ -132,7 +132,7 @@ matrix<T> matrix<T>::operator*(const matrix<T> &m) const {
                 cm += m.theColumns;     //m矩阵的映射值每次要加列数，使得所取元素移动到下一行
                 sum += element[ct] * m.element[cm];     //原矩阵的第i行的第k个元素乘以m矩阵的第j列的第k个元素
             }
-            w.element[cw++] = sum;      //其实cw就是(i - 1) * theColumns + j
+            w.element[cw++] = sum;      //其实cw就是(i - 1) * theColumns + (j - 1)
             ct -= theColumns - 1;       //ct回到原矩阵这一行的第一个元素
             cm = j;     //m矩阵取下一列的第一个元素
         }

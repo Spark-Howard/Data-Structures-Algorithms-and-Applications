@@ -2,8 +2,8 @@
 // Created by 霍华德 on 2025/11/7.
 //
 #pragma once
-#ifndef MAX_HEAP
-#define MAX_HEAP
+#ifndef MAX_HEAP_H
+#define MAX_HEAP_H
 #include <iostream>
 #include <algorithm>
 #include <sstream>
