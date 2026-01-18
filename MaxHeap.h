@@ -25,6 +25,17 @@ private:
 };
 
 template<class T>
+void changeLength(T*& a, int oldLength, int newLength) {
+    if (newLength < 0)
+        throw illegalParameterValue("new length must be >= 0");
+    T* temp = new T[newLength];
+    int number = min(oldLength, newLength);
+    copy(a, a + number, temp);
+    delete [] a;
+    a = temp;
+}
+
+template<class T>
 struct binaryTreeNode {
     binaryTreeNode<T>* leftChild;
     binaryTreeNode<T>* rightChild;
@@ -44,9 +55,9 @@ struct binaryTreeNode {
 };
 
 template<class T>
-class maxHeap {
+class MaxHeap {
 public:
-    maxHeap(int initialCapacity = 10);
+    MaxHeap(int initialCapacity = 10);
     bool empty() const { return heapSize == 0; }
     void initialize(T *theHeap, int theSize);
     void push(const T&);
@@ -60,7 +71,7 @@ private:
 };
 
 template<class T>
-maxHeap<T>::maxHeap(int initialCapacity) {
+MaxHeap<T>::MaxHeap(int initialCapacity) {
     if (initialCapacity < 1) {
         ostringstream s;
         s << "Initial capacity = " << initialCapacity << " Must be > 0";
@@ -73,10 +84,11 @@ maxHeap<T>::maxHeap(int initialCapacity) {
 
 //相当于将新插入节点放置于最后一个节点处，然后从该节点处向上起泡
 template<class T>
-void maxHeap<T>::push(const T& theElement) {
+void MaxHeap<T>::push(const T& theElement) {
     //防止存放大根堆的数组长度不够
     if (heapSize == arrayLength - 1) {
         changeLength(heap, arrayLength, 2 * arrayLength);
+        arrayLength *= 2;
     }
     //把"指针"指向完全二叉树的第一个空节点
     int currentNode = ++heapSize;
@@ -89,7 +101,7 @@ void maxHeap<T>::push(const T& theElement) {
 }
 
 template<class T>
-void maxHeap<T>::pop() {
+void MaxHeap<T>::pop() {
     if (heapSize == 0) {
         throw heapEmpty();
     }
@@ -119,7 +131,7 @@ void maxHeap<T>::pop() {
 
 //时间复杂度小于O(nlogn)，实际复杂度为Θ(n)
 template<class T>
-void maxHeap<T>::initialize(T *theHeap, int theSize) {
+void MaxHeap<T>::initialize(T *theHeap, int theSize) {
     delete [] heap;
     heap = theHeap;
     heapSize = theSize;
@@ -145,23 +157,11 @@ void maxHeap<T>::initialize(T *theHeap, int theSize) {
 }
 
 template<class T>
-T &maxHeap<T>::top() {
+T &MaxHeap<T>::top() {
     if (empty()) {
         throw heapEmpty();
     }
     return heap[1];
-}
-
-template<class T>
-void changeLength(T*& a, int oldLength, int newLength)
-{
-    if (newLength < 0)
-        throw illegalParameterValue("new length must be >= 0");
-    T* temp = new T[newLength];
-    int number = min(oldLength, newLength);
-    copy(a, a + number, temp);
-    delete[] a;
-    a = temp;
 }
 
 #endif
